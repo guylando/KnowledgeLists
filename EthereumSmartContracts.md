@@ -1,4 +1,4 @@
-## Contract security recommendations and best practices:
+## Ethereum smart contracts security recommendations and best practices:
 1. In ERC20 approve first change to 0 and then to value
    1. tokens should verify in approve that previously was 0 if changing not to 0 like in minime and also add increaseAllowance/decreaseAllowance preferring it over approve
    2. https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/edit
