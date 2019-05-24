@@ -367,10 +367,8 @@
 
 109. to get familiar with possible vulnerabilities and get ideas, Go over previous reports in https://github.com/EthereumCommonwealth/Auditing/issues?q=is%3Aissue+is%3Aclosed and when done developing the contract consider submitting it for auditing to https://github.com/EthereumCommonwealth/Auditing
 
-110. be careful when using SafeERC20, because it can cause gas drain, see: https://github.com/OpenZeppelin/openzeppelin-solidity/issues/1767
+110. be careful when using SafeERC20 with non compliant token which has a non-reverting fallback function because SafeERC20 functions such as safeTransferFrom will give no indication that transferFrom is not implemented in the token and the fallback function will be called instead silently, see: https://github.com/OpenZeppelin/openzeppelin-solidity/issues/1769
 
-111. be careful when using SafeERC20 with non compliant token which has a non-reverting fallback function because SafeERC20 functions such as safeTransferFrom will give no indication that transferFrom is not implemented in the token and the fallback function will be called instead silently, see: https://github.com/OpenZeppelin/openzeppelin-solidity/issues/1769
+111. be careful when calling other contracts and expecting them to fail on a problem because if the other contract does not implement the called function and implements a non-reverting fallback function then the transaction will be a success even though the desired function was not called
 
-112. be careful when calling other contracts and expecting them to fail on a problem because if the other contract does not implement the called function and implements a non-reverting fallback function then the transaction will be a success even though the desired function was not called
-
-113. be careful when providing a public burn function to users to burn their tokens because there is a difference between sending to irrecoverable address and burning which decreases total supply because the first is not visible to the non-technical investors while the second one will change the token total supply on coinmarketcap which might cause undesired reaction from non-technical investors who follow the token in coinmarketcap and similar tools
+112. be careful when providing a public burn function to users to burn their tokens because there is a difference between sending to irrecoverable address and burning which decreases total supply because the first is not visible to the non-technical investors while the second one will change the token total supply on coinmarketcap which might cause undesired reaction from non-technical investors who follow the token in coinmarketcap and similar tools
