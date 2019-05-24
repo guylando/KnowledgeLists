@@ -357,3 +357,20 @@
 104. anonymous keyword for events makes the event name not be stored which makes the contract gas cheaper to deploy and call the event cheaper too. should be used when contract has only one event where the event name is not enforced by some standard because then all logs are known to be from this event and no need to store the event name https://github.com/ethereum/solidity/pull/6791#issuecomment-493989944
 
 105. for tokens contract (and some other sensitive contracts too), in addition to being pausable, there should be an upgrading/migration strategy as described here: https://github.com/ethereum/EIPs/issues/644#issuecomment-494106553
+    1. See SafeUpgradeableTokenERC20 contract implementation here: https://github.com/guylando/EthereumSmartContracts
+
+106. add events where possible/useful to make auditing and debugging and findings misbehaviors easier for deployed contracts
+
+107. in tokens transfer functions prevent mistaken transfers to the token address by adding something like require( _to != address(this) ), see section 3.1 here: https://github.com/EthereumCommonwealth/Auditing/issues/236
+
+108. in tokens decreaseAllowance function set to zero if bigger than balance instead of reverting so that for example when someone wants to remove allowance from the attacker quickly using decreaseAllowance then to stop revert from happening which would give more time to the attacker to use his allowance, see section 3.2 here: https://github.com/EthereumCommonwealth/Auditing/issues/236
+
+109. to get familiar with possible vulnerabilities and get ideas, Go over previous reports in https://github.com/EthereumCommonwealth/Auditing/issues?q=is%3Aissue+is%3Aclosed and when done developing the contract consider submitting it for auditing to https://github.com/EthereumCommonwealth/Auditing
+
+110. be careful when using SafeERC20, because it can cause gas drain, see: https://github.com/OpenZeppelin/openzeppelin-solidity/issues/1767
+
+111. be careful when using SafeERC20 with non compliant token which has a non-reverting fallback function because SafeERC20 functions such as safeTransferFrom will give no indication that transferFrom is not implemented in the token and the fallback function will be called instead silently, see: https://github.com/OpenZeppelin/openzeppelin-solidity/issues/1769
+
+112. be careful when calling other contracts and expecting them to fail on a problem because if the other contract does not implement the called function and implements a non-reverting fallback function then the transaction will be a success even though the desired function was not called
+
+113. be careful when providing a public burn function to users to burn their tokens because there is a difference between sending to irrecoverable address and burning which decreases total supply because the first is not visible to the non-technical investors while the second one will change the token total supply on coinmarketcap which might cause undesired reaction from non-technical investors who follow the token in coinmarketcap and similar tools
