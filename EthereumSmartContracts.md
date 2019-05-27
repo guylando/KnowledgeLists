@@ -357,7 +357,7 @@
 104. anonymous keyword for events makes the event name not be stored which makes the contract gas cheaper to deploy and call the event cheaper too. should be used when contract has only one event where the event name is not enforced by some standard because then all logs are known to be from this event and no need to store the event name https://github.com/ethereum/solidity/pull/6791#issuecomment-493989944
 
 105. for tokens contract (and some other sensitive contracts too), in addition to being pausable, there should be an upgrading/migration strategy as described here: https://github.com/ethereum/EIPs/issues/644#issuecomment-494106553
-    1. See SafeUpgradeableTokenERC20 contract implementation here: https://github.com/guylando/EthereumSmartContracts
+     1. See SafeUpgradeableTokenERC20 contract implementation here: https://github.com/guylando/EthereumSmartContracts
 
 106. add events where possible/useful to make auditing and debugging and findings misbehaviors easier for deployed contracts
 
@@ -372,3 +372,135 @@
 111. be careful when calling other contracts and expecting them to fail on a problem because if the other contract does not implement the called function and implements a non-reverting fallback function then the transaction will be a success even though the desired function was not called
 
 112. be careful when providing a public burn function to users to burn their tokens because there is a difference between sending to irrecoverable address and burning which decreases total supply because the first is not visible to the non-technical investors while the second one will change the token total supply on coinmarketcap which might cause undesired reaction from non-technical investors who follow the token in coinmarketcap and similar tools. Another difference is that discussions about the retrieval of locked tokens refer more to tokens sent to invalid address than to burned tokens, which shows that sending tokens to invalid address may still legally make those tokens belong to their owner, see the discussion here: https://github.com/ethereum/EIPs/pull/867#issuecomment-365746101
+
+113. use modifiers to make code cleaner and understandable (modifiers are macros compiled inline). cleaner and more readable code improves chances of discovering bugs earier and writing better and more secure code.
+
+114. security tools and other useful tools to use to scan smart contracts and develop smart contracts (FIRST CHECK THAT SCANNERS DON'T HAVE DISTRIBUTION RIGHTS FOR THE CONTRACT CODE):
+     1. https://github.com/ConsenSys/mythril-classic
+         1. to run on windows
+             1. first install docker desktop app
+             2. if the contract is using solidity compiler 0.4.24 and contract name is DDD and it is located in C:\Users\user\Downloads\target.sol then run "docker run --rm -v C:\Users\user\Downloads:/Downloads mythril/myth -x /Downloads/target.sol:DDD -mether_thief --verbose-report --solv 0.4.24"
+             3. the -v command maps the folder on the left of ':' in host to the folder on the right of ':' inside the docker
+             4. the --rm command cleans the docker after finishing running the command so if want to run several related/dependent commands then omit -rm and add it only in the end for cleanup https://docs.docker.com/engine/reference/run/#clean-up---rm
+         2. note: after running it need to wait about 10-20 minutes for it to finish (it does not show any output in that time so be patient) so better idea is not to wait for it and to do something else while it is running
+         3. CONCLUSION: YES. it is good and should always use it to get general direction to existing vulnerabilities (it does not produce exact exploit but gives a direction if it finds a vulnerability)
+     2. http://remix.ethereum.org
+         1. compiling in remix perform static analysis and might detect bugs
+         2. CONCLUSION: YES. it should be used but most if not all of the warnings are false positives so not to waste too much time on them
+     3. https://github.com/crytic/slither
+         1. requires python 3.6
+         2. pip install slither-analyzer
+         3. download latest solc compiler version and put it in the PATH (or otherwise slither will throw "file not found" error) https://github.com/ethereum/solidity/releases
+         4. reopen cmd and run "slither contract_file_path_and_filename.sol"
+         5. CONCLUSION: YES. it is good and should always use it to detect small possible optimizations and fixes
+     4. https://github.com/crytic/eth-security-toolbox
+         1. very heavy and takes a lot of time to download
+         2. contains slither, echidna, manticore and some other tools
+         3. docker pull trailofbits/eth-security-toolbox (takes 10+ minutes)
+         4. docker run -it -v C:\Users\user\Downloads:/Downloads trailofbits/eth-security-toolbox (replace "user" with the windows user name)
+         5. slither /Downloads/contract.sol (where contract.sol is inside the windows user downloads folder)
+         6. echidna-test /Downloads/contract.sol ContractName
+         7. CONCLUSION: YES. the eth-security-toolbox is slow to download but convinient if many of the tools inside it are used
+     5. https://github.com/crytic/echidna
+         1. use using eth-security-toolbox docker
+         2. requires to write tests to make it work so it is not a drop in solution
+         3. CONCLUSION: NO. not so useful for a simple quick security check since it requires development
+     6. https://github.com/trailofbits/manticore
+         1. use using eth-security-toolbox docker
+         2. https://github.com/trailofbits/manticore/issues/1382
+         3. https://github.com/trailofbits/manticore/issues/1315
+         4. CONCLUSION: NO. has a lot of bugs making it unusable right now
+     7. solidity security vscode extension https://marketplace.visualstudio.com/items?itemName=tintinweb.solidity-visual-auditor
+         1. CONCLUSION: use during development to fix problems as they are typed into the code
+     8. https://github.com/melonproject/oyente
+         1. https://github.com/melonproject/oyente/issues/334
+         2. https://github.com/melonproject/oyente/issues/268
+         3. CONCLUSION: NO. outdated and deprecated and not maintained anymore
+     9. https://github.com/raineorshine/solgraph
+         1. does not support new solidity versions https://github.com/raineorshine/solgraph/issues/39
+         2. CONCLUSION: NO. outdated and deprecated and not maintained anymore
+     10. https://github.com/MAIAN-tool/MAIAN
+         1. CONCLUSION: NO. outdated and deprecated and not maintained anymore
+     11. https://github.com/quoscient/octopus
+         1. CONCLUSION: NO. not well documented and not actively developed
+     12. https://github.com/cleanunicorn/karl
+         1. CONCLUSION: NO. not actively developed and installation on windows doesn't even work. it just runs mithril on deployed contracts so if the goal is to analyze your contract then better run mithril directly
+     13. https://github.com/ConsenSys/surya
+         1. npm install -g surya
+         2. "surya describe contract.sol" quickly displays a summary of the functions and contracts in the file
+         3. "surya graph contract.sol > dot -Tpng > contract.png" creates contract calls graph (dot tool is available here: https://graphviz.gitlab.io)
+         4. graph creation does not work https://github.com/ConsenSys/surya/issues/76
+         5. CONCLUSION: YES. can be good for general contract analysis, can help notice problems but does not provide vulnerabilities information
+     14. SECBIT Solidity Static Analyzer
+         1. https://github.com/sec-bit/adelaide/blob/secbit-ssae/README.secbit.md
+         2. available as vscode extension: https://github.com/sec-bit/vscode-secbit-ssae
+         3. https://marketplace.visualstudio.com/items?itemName=SECBIT.vscode-secbit-ssae
+         4. CONCLUSION: NO. does not work and is not actively developed or maintained
+     15. https://github.com/b-mueller/scrooge-mcetherface
+         1. ONLY RUN ON TEST ENVIRONMENT
+         2. doesn't have a docker and uses mithril which is not compatible with windows so easiest way to install is in case a docker is installer such as the eth-security-toolbox docker then run:
+             1. if container is running
+                 1. "docker ps"
+                 2. copy the CONTAINER ID of the ubuntu docker instance
+                 3. "docker attach {container-id}"
+             2. if container is not running (or running not as root then "exit" and run this to start as root)
+                 1. docker  run -u 0 -v C:\Users\user\Downloads:/Downloads -it trailofbits/eth-security-toolbox
+             3. then run installation steps in that shell https://github.com/b-mueller/scrooge-mcetherface#installation
+         3. CONCLUSION: NO. not actively developed or maintained or supported and installation on windows doesn't work. it just runs mithril on deployed contracts so if the goal is to analyze your contract then better run mithril directly
+     16. https://github.com/protofire/solhint
+         1. npm install -g solhint
+         2. solhint init-config
+         3. solhint contract.sol
+         4. CONCLUSIONS: YES. useful to get formatting tips but doesn't give security tips
+     17. https://github.com/duaraghav8/Ethlint
+         1. npm install -g ethlint
+         2. solium --init
+         3. solium -f contract.sol
+         4. CONCLUSION: YES. useful to get suggestions on both formatting and coding and security
+     18. https://github.com/smartdec/smartcheck
+         1. npm install @smartdec/smartcheck -g
+         2. smartcheck -p contract.sol
+         3. can run automatically using https://tool.smartdec.net/
+         4. CONCLUSION: YES. gives security suggestions which are 90%-100% false positives so use it but reverify the suggestions. dont use the command line tool because it is unclear, only use the online interface.
+     19. https://github.com/eth-sri/securify https://securify.chainsecurity.com/
+         1. CONCLUSION: NO. does not work. normal and docker installations fail and when attempting to use their website to scan either pasted code or github repository then it is stuck in infinite 404 XHR errors until finally displays "bad gateway" error
+     20. https://github.com/tagomaru/truffle-sca2t
+         1. basically only integrates running mythx using truffle run mythx command
+         2. CONCLUSION: NO. should prefer to use mythx official integration (truffle-security npm package) which is officially supported and more actively developed
+     21. https://github.com/rajeevgopalakrishna/Solstice
+         1. https://medium.com/@rajeevgopalakrishna/solstice-solidity-security-tool-for-investigative-contract-examination-1fafda26d038
+         2. CONCLUSION: NO. official installation steps give syntax error and it is not actively developed or maintained
+     22. mythx + mythos + official truffle integration
+         1. npm install -g truffle-security
+         2. truffle run verify
+         3. https://github.com/ConsenSys/truffle-security
+         4. https://docs.mythx.io/en/latest/tooling/truffle.html
+         5. https://medium.com/consensys-diligence/mythx-and-truffle-security-painless-smart-contract-security-testing-6d0fe5e938da
+         6. https://github.com/cleanunicorn/mythos
+         7. https://docs.mythx.io/en/latest/tooling/mythos.html
+         8. basically mythx is a server side api and mythos and truffle-security and other tools are just client side tools integrating with mythx api so doesn't matter which to use. 
+         9. CONCLUSION: YES. using truffle-security produced no output so used mythos instead and it performed security analysis as desired. should use it always to get security analysis tips
+     23. https://github.com/cgewecke/eth-gas-reporter
+         1. if solidity-coverage throws error about eth-gas-reporter not found then make sure everything is installed in same scope (installing eth-gas-reporter globally might solve the problem)
+         2. CONCLUSION: YES. useful to find problematic functions which take too much gas in unit testing of contracts
+     24. https://github.com/sc-forks/solidity-coverage
+         1. look at open zeppelin repository for coverage addition to truffle-config.json and for .solcover.js file contents but in .solcover.js only use norpc:true and change skipFiles to point to your truffle Migrations file and also add there your mockup contracts files
+         2. npm install --save-dev solidity-coverage
+         3. ./node_modules/.bin/solidity-coverage
+         4. node_modules\.bin\solidity-coverage
+         5. by default returns errors for solidity 0.5.0+ https://github.com/sc-forks/solidity-coverage/issues/316
+             1. open zeppelin installed https://github.com/rotcivegaf/solidity-coverage fork for solidity 0.5.0+ support so can do the same
+             2. but latest solidity-coverage development happens on this branch: https://github.com/sc-forks/solidity-coverage/tree/leapdao
+             3. the active branch can be installed using: npm install --save-dev git://github.com/sc-forks/solidity-coverage#leapdao
+         6. following those intructions to run on windows: https://github.com/sc-forks/solidity-coverage/blob/master/docs/faq.md#running-on-windows
+             1. run "node_modules\.bin\testrpc-sc -p 8555" in another terminal before running the coverage
+         7. if get "Returned error: Exceeds block gas limit" error then delete gas, gasPrice configs from coverage config in truffle-config.json
+         8. if get "invalid opcode" errors then better not to run testrpc-sc and instead use ganache-cli and change truffle-config.json coverage port to 8454 ganache cli port https://ethereum.stackexchange.com/questions/69866/solc-error-invalid-opcode-but-works-in-truffle
+             1. UPDATE: using ganache-cli makes other errors happen and does not allow to get coverage report so the better solution is to update solidity-coverage to the active branch as described above
+         9. if get "base fee exceeds gas limit" error then in truffle-config.json increase or delete gas config from coverage network config
+         10. if get "out of gas" errors (because instrumentation of contracts makes them too big) then
+              1. add "--allowUnlimitedContractSize" parameter to the testchain execution to allow contracts above 24KB to be deployed (otherwise there is an out of gas error even though the reason is the size and not gas https://github.com/ethereum/EIPs/blob/master/EIPS/eip-170.md)
+              2. increase gas parameter of coverage network config in truffle-config.json to 0xfffffffffff (what is sent to the blockchain) AND increase ganache-cli gas limit to 0xfffffffffff (default is around 6.7 million) using -l parameter (what is supported in the blockchain): "ganache-cli -l 0xfffffffffff"
+         11. creates very helpful instanbul html reports which can quickly help add the missing test cases
+         12. CONCLUSION: YES. might be hard to make it work but it is a MUST HAVE tool to use to improve the testing coverage and after all configurations being set well it works as desired
+	
