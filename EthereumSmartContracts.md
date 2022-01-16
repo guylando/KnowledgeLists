@@ -70,7 +70,7 @@
 20. be careful of replay attacks and of different assumptions https://media.consensys.net/discovering-signature-verification-bugs-in-ethereum-smart-contracts-424a494c6585
     1. for example previously a replay was possible between ethereum mainnet transaction and other chains, this was addressed in eip 155: https://eips.ethereum.org/EIPS/eip-155
 
-21. Don’t write fancy code
+21. Implement only the necessary functionality and try doing that in the shortest and most efficient way, to avoid creating unneccesary attack surface and room for bugs in the code
 
 22. Use audited and tested code https://security.stackexchange.com/questions/18197/why-shouldnt-we-roll-our-own
 
